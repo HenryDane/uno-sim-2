@@ -2,20 +2,11 @@
 #include "main.h"
 #include "player.h"
 
-/*
-    TODO:
-    -   ADD CARD SELECTION ALGORITHM
-    -   ADD STACKING OF EFFECTS
-    -   ADD WILD CARD MECHANICS
-    -   WHAT IF NO GOOD CARDS
-    -   TEST
-*/
-
 void Player::init(void){
     return;
 }
 int Player::num_cards(void){
-    return _hand.get_cards().size();
+    return _hand._cards.size();
 }
 void Player::take_card(card_t c){
     _hand.put_on_top(c);
@@ -26,49 +17,81 @@ std::string Player::print(void){
 
 /*
     function determines basic game mechanics
+    returns 1 after playing a reverse
+    does not yet stack
+
+    TODO
+    -   reflag plus_4 as used
+    -   fix drawing of cards
+    -   debug
 */
-int Player::do_turn(Deck &deck){
-    std::cout << "2";
-    switch (deck.get_value_of_top()){
-        case 13: // wild
-            {
-                std::cout << "3";
-                card_t d = find_in_hand({-1, deck.get_color_of_top(), false});
-                std::cout << "4";
-                while (d.value < 0) {
-                    d = deck.get_from_top();
-                    _hand.put_on_top(d);
-                }
-                deck.put_on_top(d); // handles modifier bonuses
+int Player::do_turn(Deck &deck, Deck &discard){
+//    bool this_turn_wild = false;
+    color_t wild_color = BLACK;
+
+    // execute top of discard
+    card_t top = discard.get_from_top();
+    if (top.color == BLACK && top.value == 14) { // plus4
+        for (int i = 0; i < 4; i++) // do this 4 times
+            _hand.put_on_top(deck.get_from_top()); // take a card
+        return 14;
+    } else if (top.color != BLACK && top.value == 12) { // any plus2
+        for (int i = 0; i < 2; i++) // do this 2 times
+            _hand.put_on_top(deck.get_from_top()); // take a card
+        return 12;
+    } else if (top.color != BLACK && top.value == 10) { // any skip
+        return 10;
+    } else if (top.color != BLACK && top.value == 11) { // any reverse
+
+    } else if (top.color == BLACK && top.value == 13) { // any wild
+        // raise self flag
+//        this_turn_wild = true;
+
+        // reset the global flag
+        wild_color = wild_color_now;
+        wild_color_valid = false;
+    }
+
+    // card found in hand
+    card_t found;
+    if (top.value != 13) { // if its not a wild then
+        found = find_in_hand(top); // look for card by card
+    } else { // but if it was a wild
+        found = find_in_hand({1000, wild_color}); // look for card by color only
+    }
+    if (found.value < 0) { // couldn't find a good card
+        while(true){
+            card_t drawn = deck.get_from_top();
+            _hand.put_on_top(drawn);
+            if (deck.get_cards().size() == 0) { // if we ran out of cards
+                deck.generate_deck(); // rebuild deck
+                deck.shuffle(); // shuffle deck
             }
-            break;
-        case 14: // plus4
-            {
-                for (int i = 0; i < 4; i++)
-                    _hand.put_on_top(deck.get_from_top()); // add 4 cards
-            }
-            break;
-        case 12: // plus2
-            {
-                for (int i = 0; i < 2; i++)
-                    _hand.put_on_top(deck.get_from_top()); // add 2 cards
-            }
-            break;
-        case 10: // skip
-            return 10;
-        case 11: // reverse does nothing rn
-            return 11;
-        default:
-            std::cout << "5";
-            card_t d = find_in_hand({deck.get_value_of_top(), deck.get_color_of_top(), false});
-            std::cout << "6";
-            while (d.value < 0) {
-                d = deck.get_from_top();
-                _hand.put_on_top(d);
-            }
-            std::cout << "7";
-            deck.put_on_top(d); // handles modifier bonuses
-            break;
+            if (drawn.color == top.color ||
+                drawn.value == top.value)
+                break;
+        }
+
+        found = find_in_hand(top);
+        if (found.value < 0) {
+            std::cout << "SOMETHING IS VERY WRONG IN WHOOVILLE" << std::endl;
+            abort();
+        }
+    }
+
+    // put back the top card
+    discard.put_on_top(top);
+
+    // place ur card on top
+    std::cout << "I played a " << print_card(found) << std::endl;
+    discard.put_on_top(found);
+
+    if (found.value == 11) { // if its a reverse
+        return 1; // let the game know its time to change direction
+    } else if (found.value == 13) { // if it is a wild
+        wild_color = static_cast<color_t>(rand() % 4); // awful hack for choosing color
+        wild_color_valid = true; // raise the flag agian
+        return 13; // let game know what happened
     }
 
     return 0;
@@ -78,36 +101,21 @@ int Player::do_turn(Deck &deck){
     different versions of this are OK -- this is how the player finds their card
 */
 card_t Player::find_in_hand(card_t c){
-    std::cout << "9";
     std::vector<card_t> cards = _hand.get_cards();
 
-    //              R  G  B  Y  *
-//    int cards[5] = {0, 0, 0, 0, 0}; // keep track of number of cards of each color
-    std::cout << "8";
-    int i = 0;
-    bool found = false;
-    for ( ; i < cards.size(); i++){
-        if (c.value > 0) {
-            if (cards[i].color == c.color ||
-                cards[i].color == BLACK ||
-                cards[i].value == c.value) {
-                found = true;
-                break;
-            }
+    for (unsigned int i = 0; i < cards.size(); i++){
+        if (c.value == 1000) {
+            if (cards.at(i).color == BLACK||
+                cards.at(i).color == c.color)
+                return cards.at(i);
         } else {
-            if (cards[i].color == c.color ||
-                cards[i].color == BLACK) {
-                found = true;
-                break;
-            }
+            if (cards.at(i).color == BLACK||
+                cards.at(i).color == c.color ||
+                cards.at(i).color == c.value)
+                return cards.at(i);
         }
     }
 
-    std::cout << "10";
-
-    if (found) {
-        return _hand.get_nth_card(i);
-    } else {
-        return {-1, BLACK, false};
-    }
+    // no card was found
+    return {-1, BLACK, false};
 }

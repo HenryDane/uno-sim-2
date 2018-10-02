@@ -7,12 +7,15 @@
 #include "patch.h"
 
 card_t Deck::get_from_top( void ){
-    std::cout << std::endl << "{S:" << _cards.size() << "}" << std::endl;
+    //std::cout << std::endl << "{S:" << _cards.size() << "}" << std::endl;
     card_t c;
     __H(c = _cards.back(););
-    std::cout << "C";
+    //std::cout << "C";
     _cards.erase(_cards.begin() + _cards.size() - 1);
     return c;
+}
+card_t Deck::view_top ( void ) {
+    return _cards.back();
 }
 void Deck::put_on_top( card_t c ){
     _cards.push_back(c);
@@ -34,14 +37,14 @@ color_t Deck::get_color_of_top( void ){
 }
 int Deck::get_num_color (color_t c){
     int a = 0;
-    for (int i = 0; i < _cards.size(); i++){
+    for (unsigned int i = 0; i < _cards.size(); i++){
         if (_cards[i].color == c) a++;
     }
     return a;
 }
 
 void Deck::generate_deck( void ){
-    _cards.clear();
+    //_cards.clear();
 
     for (int i = 0; i < 4; i++){ // color loop
         for (int j = 0; j < 13; j++){
@@ -63,11 +66,12 @@ void Deck::generate_deck( void ){
 }
 void Deck::shuffle( void ){
     std::vector<card_t> n;
-    for (int i = 0; i < _cards.size(); i++){
+    for (unsigned int i = 0; i < _cards.size(); i++){
         int addr = rand() % _cards.size();
         while (_cards[addr].value < 0) addr = rand() % _cards.size(); // reroll as needed
 
         n.push_back(_cards[addr]);
+        _cards[addr].value = -1000;
     }
 
     _cards = n;
@@ -83,7 +87,7 @@ card_t Deck::get_nth_card(int n){
 }
 
 std::string Deck::print(void){
-    std::string s = "DECK : ";
+    std::string s = "DECK : " + patch::to_string(_cards.size()) + " ";
     for (card_t card : _cards){
         std::string c = "!!!";
 
@@ -119,4 +123,39 @@ std::string Deck::print(void){
     }
 
     return s;
+}
+
+std::string print_card(card_t card) {
+    std::string c = "!!!";
+
+    switch (card.color){
+    case RED:
+        c = "R"; break;
+    case GREEN:
+        c = "G"; break;
+    case BLUE:
+        c = "B"; break;
+    case YELLOW:
+        c = "Y"; break;
+    case BLACK:
+        c = "BLK"; break;
+    }
+
+    switch (card.value) {
+    case 12:
+        c += "+"; break;
+    case 13:
+        c += "WILD"; break;
+    case 14:
+        c += "PLS4"; break;
+    case 11:
+        c += "R"; break;
+    case 10:
+        c += "S"; break;
+    default:
+        c += patch::to_string(card.value);
+        break;
+    }
+
+    return c;
 }
