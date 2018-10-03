@@ -5,51 +5,28 @@
 #include "player.h"
 
 void deal(Deck &deck, std::vector<Player> &players);
+int simulate_game(int n_players);
 
 color_t wild_color_now = BLACK;
 bool wild_color_valid = false;
 
 int main() {
-    bool done = false;
     std::cout << "Uno Simulator 2" << std::endl;
 
-    std::vector<Player> players;
-    for (int i = 0; i < 4; i++) {
-        Player p;
-        p.init();
-        players.push_back(p);
-    }
-
-    Deck deck;
-    Deck discard;
-
-    deck.generate_deck();
-    deck.shuffle();
-    __DP(deck);
-    deal(deck, players);
-
-    for(unsigned int i = 0; i < players.size(); i++) {
-        std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
-        std::cout << players.at(i).print() << std::endl;
-    }
-
-    int turns = 0;
-    while (!done) {
-        bool reversed = false;
-        for (unsigned int i = 0; i < players.size(); i += ((reversed == false) ? 1 : -1)){
-            if (players[i].do_turn(deck, discard) == 1) reversed = !reversed;
-
-            std::cout << std::endl << "========== [TURN: " << turns << "] =========" << std::endl;
-            std::cout << "TOP DECK:" << print_card(deck.view_top()) << " TOP DISCARD:" << print_card(discard.view_top()) << std::endl;
-            for(unsigned int i = 0; i < players.size(); i++) {
-                std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
-                std::cout << players.at(i).print() << std::endl;
-            }
-
-            turns++;
-            if (turns > 50) return 5;
+    int p1, p2, p3, p4;
+    p1 = p2 = p3 = p4 = 0;
+    for (int i = 0; i < 1000; i++){
+        int a = simulate_game(4);
+        switch (a) {
+            case 0: p1++; break;
+            case 1: p2++; break;
+            case 2: p3++; break;
+            case 3: p4++; break;
+            default:
+                std::cout << "A: " << a << std::endl;
         }
     }
+    std::cout << p1 << " " << p2 << " " << p3 << " " << p4 << std::endl;
 
     return 0;
 }
@@ -63,4 +40,50 @@ void deal(Deck &deck, std::vector<Player> &players){
             players[j]._hand._cards.push_back(c);
         }
     }
+}
+
+int simulate_game(int n_players) {
+    bool done = false;
+    std::vector<Player> players;
+    for (int i = 0; i < 4; i++) {
+        Player p;
+        p.init(i);
+        players.push_back(p);
+    }
+
+    Deck deck;
+    Deck discard;
+
+    deck.generate_deck();
+    deck.shuffle();
+    __DP(deck);
+    deal(deck, players);
+
+    /*for(unsigned int i = 0; i < players.size(); i++) {
+        std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
+        std::cout << players.at(i).print() << std::endl;
+    }*/
+
+    int turns = 0;
+    while (!done) {
+        bool reversed = false;
+        for (unsigned int i = 0; i < players.size(); i += ((reversed == false) ? 1 : -1)){
+            if (players[i].do_turn(deck, discard) == 1) reversed = !reversed;
+
+            //std::cout << std::endl << "========== [TURN: " << turns << "] =========" << std::endl;
+            //std::cout << "TOP DECK:" << print_card(deck.view_top()) << " TOP DISCARD:" << print_card(discard.view_top()) << std::endl;
+            //std::cout << "SIZE DECK:" << deck.get_cards().size() << " SIZE DISCARD:" << discard.get_cards().size() << std::endl;
+            for(unsigned int i = 0; i < players.size(); i++) {
+                //std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
+               // std::cout << players.at(i).print() << std::endl;
+            }
+
+            turns++;
+            for (int i = 0; i < players.size(); i++)
+                if (players[i].num_cards() == 0) return i;
+            //if (turns > 50) return 5;
+        }
+    }
+
+    return 1000;
 }

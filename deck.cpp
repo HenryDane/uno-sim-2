@@ -48,7 +48,7 @@ void Deck::generate_deck( void ){
 
     for (int i = 0; i < 4; i++){ // color loop
         for (int j = 0; j < 13; j++){
-            card_t c = {j, (color_t) i};
+            card_t c = {j, (color_t) i, true};
 
             _cards.push_back(c);
 
@@ -81,45 +81,17 @@ std::vector<card_t> Deck::get_cards(void){
     return _cards;
 }
 card_t Deck::get_nth_card(int n){
+    //std::cout << "OLD" << _cards.size();
     card_t c = _cards[n];
     _cards.erase(_cards.begin() + n);
+    //std::cout << "NEW" << _cards.size() << std::endl;
     return c;
 }
 
 std::string Deck::print(void){
     std::string s = "DECK : " + patch::to_string(_cards.size()) + " ";
     for (card_t card : _cards){
-        std::string c = "!!!";
-
-        switch (card.color){
-        case RED:
-            c = "R"; break;
-        case GREEN:
-            c = "G"; break;
-        case BLUE:
-            c = "B"; break;
-        case YELLOW:
-            c = "Y"; break;
-        case BLACK:
-            c = "BLK"; break;
-        }
-
-        switch (card.value) {
-        case 12:
-            c += "+"; break;
-        case 13:
-            c += "WILD"; break;
-        case 14:
-            c += "PLS4"; break;
-        case 11:
-            c += "R"; break;
-        case 10:
-            c += "S"; break;
-        default:
-            c += patch::to_string(card.value);
-            break;
-        }
-        s += c + " ";
+        s += print_card(card) + " ";
     }
 
     return s;
@@ -139,6 +111,17 @@ std::string print_card(card_t card) {
         c = "Y"; break;
     case BLACK:
         c = "BLK"; break;
+    default:
+        std::cout << "Error while scanning card color" << std::endl;
+        std::cout << "Found [" << card.color << "]" << std::endl;
+        abort();
+        break;
+    }
+
+    if (card.value < 0 || card.value > 14){
+        std::cout << "Error while scanning card value" << std::endl;
+        std::cout << "Found [" << card.value << "]" << std::endl;
+        abort();
     }
 
     switch (card.value) {

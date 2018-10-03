@@ -8,12 +8,13 @@ class Player {
 public:
     Deck _hand;
     card_t find_in_hand(card_t c);
+    int _id;
 public:
     Player(){
         // do nothing
     }
 
-    void init(void);
+    void init(int id);
     int do_turn(Deck &deck, Deck &discard);
     int num_cards(void);
     void take_card(card_t c);

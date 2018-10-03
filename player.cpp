@@ -2,7 +2,8 @@
 #include "main.h"
 #include "player.h"
 
-void Player::init(void){
+void Player::init(int id){
+    _id = id;
     return;
 }
 int Player::num_cards(void){
@@ -32,18 +33,57 @@ int Player::do_turn(Deck &deck, Deck &discard){
     // execute top of discard
     card_t top = discard.get_from_top();
     if (top.color == BLACK && top.value == 14) { // plus4
-        for (int i = 0; i < 4; i++) // do this 4 times
-            _hand.put_on_top(deck.get_from_top()); // take a card
-        return 14;
+        if (top.wild) {
+            for (int i = 0; i < 4; i++) // do this 4 times
+                _hand.put_on_top(deck.get_from_top()); // take a card
+            top.wild = false;
+            // put back the top card
+            discard.put_on_top(top);
+
+            //std::cout << _id << " I took 4 cards" << std::endl;
+            return 14;
+        } else {
+            //std::cout << _id << " I ignored an already used +4" << std::endl;
+            top.wild = false;
+            // put back the top card
+            discard.put_on_top(top);
+            // raise self flag
+    //        this_turn_wild = true;
+
+            // reset the global flag
+            wild_color = wild_color_now;
+            wild_color_valid = false;
+        }
     } else if (top.color != BLACK && top.value == 12) { // any plus2
-        for (int i = 0; i < 2; i++) // do this 2 times
-            _hand.put_on_top(deck.get_from_top()); // take a card
-        return 12;
+        if (top.wild) {
+            for (int i = 0; i < 2; i++) // do this 2 times
+                _hand.put_on_top(deck.get_from_top()); // take a card
+            top.wild = false;
+            // put back the top card
+            discard.put_on_top(top);
+
+            //std::cout << _id << " I took 2 cards" << std::endl;
+            return 12;
+        } else {
+            //std::cout << _id << " I ignored an already used +2" << std::endl;
+        }
     } else if (top.color != BLACK && top.value == 10) { // any skip
-        return 10;
+        if (top.wild) {
+            top.wild = false;
+            // put back the top card
+            discard.put_on_top(top);
+
+            //std::cout << _id << " I was skipped" << std::endl;
+            return 10;
+        } else {
+            //std::cout << _id << " I ignored an already used skip" << std::endl;
+        }
     } else if (top.color != BLACK && top.value == 11) { // any reverse
 
     } else if (top.color == BLACK && top.value == 13) { // any wild
+        top.wild = false;
+        // put back the top card
+        discard.put_on_top(top);
         // raise self flag
 //        this_turn_wild = true;
 
@@ -61,12 +101,12 @@ int Player::do_turn(Deck &deck, Deck &discard){
     }
     if (found.value < 0) { // couldn't find a good card
         while(true){
-            card_t drawn = deck.get_from_top();
-            _hand.put_on_top(drawn);
-            if (deck.get_cards().size() == 0) { // if we ran out of cards
+            if (deck.get_cards().size() < 10) { // if we ran out of cards
                 deck.generate_deck(); // rebuild deck
                 deck.shuffle(); // shuffle deck
             }
+            card_t drawn = deck.get_from_top();
+            _hand.put_on_top(drawn);
             if (drawn.color == top.color ||
                 drawn.value == top.value)
                 break;
@@ -75,6 +115,8 @@ int Player::do_turn(Deck &deck, Deck &discard){
         found = find_in_hand(top);
         if (found.value < 0) {
             std::cout << "SOMETHING IS VERY WRONG IN WHOOVILLE" << std::endl;
+            std::cout << "[" << found.color << " | " << found.value << "]" << std::endl;
+            __DP(_hand);
             abort();
         }
     }
@@ -83,15 +125,19 @@ int Player::do_turn(Deck &deck, Deck &discard){
     discard.put_on_top(top);
 
     // place ur card on top
-    std::cout << "I played a " << print_card(found) << std::endl;
+    //std::cout << _id << " I played a " << print_card(found) << std::endl;
     discard.put_on_top(found);
 
     if (found.value == 11) { // if its a reverse
         return 1; // let the game know its time to change direction
     } else if (found.value == 13) { // if it is a wild
-        wild_color = static_cast<color_t>(rand() % 4); // awful hack for choosing color
+        wild_color_now = static_cast<color_t>(rand() % 4); // awful hack for choosing color
         wild_color_valid = true; // raise the flag agian
         return 13; // let game know what happened
+    } else if (found.value == 14) { // plus 4
+        wild_color_now = static_cast<color_t>(rand() % 4); // awful hack for choosing color
+        wild_color_valid = true; // raise the flag agian
+        return 14; // let game know what happened
     }
 
     return 0;
@@ -107,12 +153,12 @@ card_t Player::find_in_hand(card_t c){
         if (c.value == 1000) {
             if (cards.at(i).color == BLACK||
                 cards.at(i).color == c.color)
-                return cards.at(i);
+                return _hand.get_nth_card(i);
         } else {
             if (cards.at(i).color == BLACK||
                 cards.at(i).color == c.color ||
-                cards.at(i).color == c.value)
-                return cards.at(i);
+                cards.at(i).value == c.value)
+                return _hand.get_nth_card(i);
         }
     }
 
