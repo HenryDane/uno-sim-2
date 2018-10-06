@@ -43,9 +43,10 @@ void deal(Deck &deck, std::vector<Player> &players){
 }
 
 int simulate_game(int n_players) {
+    //std::cout << "-----------------New Game-----------------" << std::endl;
     bool done = false;
     std::vector<Player> players;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < n_players; i++) {
         Player p;
         p.init(i);
         players.push_back(p);
@@ -56,13 +57,13 @@ int simulate_game(int n_players) {
 
     deck.generate_deck();
     deck.shuffle();
-    __DP(deck);
+    //__DP(deck);
     deal(deck, players);
 
-    /*for(unsigned int i = 0; i < players.size(); i++) {
-        std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
-        std::cout << players.at(i).print() << std::endl;
-    }*/
+    for(unsigned int i = 0; i < players.size(); i++) {
+        //std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
+        //std::cout << players.at(i).print() << std::endl;
+    }
 
     int turns = 0;
     while (!done) {
@@ -70,18 +71,24 @@ int simulate_game(int n_players) {
         for (unsigned int i = 0; i < players.size(); i += ((reversed == false) ? 1 : -1)){
             if (players[i].do_turn(deck, discard) == 1) reversed = !reversed;
 
-            //std::cout << std::endl << "========== [TURN: " << turns << "] =========" << std::endl;
+            //std::cout << std::endl;
+            //std::cout << "========== [TURN: " << turns << "] =========" << std::endl;
             //std::cout << "TOP DECK:" << print_card(deck.view_top()) << " TOP DISCARD:" << print_card(discard.view_top()) << std::endl;
-            //std::cout << "SIZE DECK:" << deck.get_cards().size() << " SIZE DISCARD:" << discard.get_cards().size() << std::endl;
+            //std::cout << "SIZE DECK:" << deck.num_cards() << " SIZE DISCARD:" << discard.num_cards() << std::endl;
             for(unsigned int i = 0; i < players.size(); i++) {
                 //std::cout << "========== [PLAYER " << i << "] ==========" << std::endl;
-               // std::cout << players.at(i).print() << std::endl;
+                //std::cout << players.at(i).print() << std::endl;
             }
 
             turns++;
             for (int i = 0; i < players.size(); i++)
                 if (players[i].num_cards() == 0) return i;
             //if (turns > 50) return 5;
+
+            if (deck.num_cards() < 10){
+                deck.generate_deck();
+                deck.shuffle();
+            }
         }
     }
 

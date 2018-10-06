@@ -22,6 +22,7 @@ public:
     card_t get_from_top( void );
     card_t view_top ( void );
     void put_on_top( card_t c );
+    int num_cards( void );
 
     int get_value_of_top( void );
     color_t get_color_of_top( void );
@@ -30,7 +31,7 @@ public:
     void generate_deck( void );
     void shuffle( void );
 
-    std::vector<card_t> get_cards(void);
+    std::vector<card_t>* get_cards(void);
     card_t get_nth_card(int n);
 
     std::string print(void);

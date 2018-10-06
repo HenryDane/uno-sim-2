@@ -9,7 +9,14 @@
 card_t Deck::get_from_top( void ){
     //std::cout << std::endl << "{S:" << _cards.size() << "}" << std::endl;
     card_t c;
-    __H(c = _cards.back(););
+    //__H(c = _cards.back(););
+    if (_cards.size() < 2) {
+        generate_deck();
+        shuffle();
+        c = _cards.back();
+    } else {
+        c = _cards.back();
+    }
     //std::cout << "C";
     _cards.erase(_cards.begin() + _cards.size() - 1);
     return c;
@@ -45,6 +52,7 @@ int Deck::get_num_color (color_t c){
 
 void Deck::generate_deck( void ){
     //_cards.clear();
+    _cards.reserve(110);
 
     for (int i = 0; i < 4; i++){ // color loop
         for (int j = 0; j < 13; j++){
@@ -77,8 +85,11 @@ void Deck::shuffle( void ){
     _cards = n;
 }
 
-std::vector<card_t> Deck::get_cards(void){
-    return _cards;
+std::vector<card_t>* Deck::get_cards(void){
+    return &_cards;
+}
+int Deck::num_cards(void) {
+    return _cards.size();
 }
 card_t Deck::get_nth_card(int n){
     //std::cout << "OLD" << _cards.size();

@@ -26,7 +26,7 @@ std::string Player::print(void){
     -   fix drawing of cards
     -   debug
 */
-int Player::do_turn(Deck &deck, Deck &discard){
+int Player::do_turn(Deck &deck, Deck &discard, bool debug){
 //    bool this_turn_wild = false;
     color_t wild_color = BLACK;
 
@@ -40,10 +40,10 @@ int Player::do_turn(Deck &deck, Deck &discard){
             // put back the top card
             discard.put_on_top(top);
 
-            //std::cout << _id << " I took 4 cards" << std::endl;
+            if (debug) std::cout << _id << " I took 4 cards" << std::endl;
             return 14;
         } else {
-            //std::cout << _id << " I ignored an already used +4" << std::endl;
+            if (debug) std::cout << _id << " I ignored an already used +4" << std::endl;
             top.wild = false;
             // put back the top card
             discard.put_on_top(top);
@@ -62,10 +62,10 @@ int Player::do_turn(Deck &deck, Deck &discard){
             // put back the top card
             discard.put_on_top(top);
 
-            //std::cout << _id << " I took 2 cards" << std::endl;
+            if (debug) std::cout << _id << " I took 2 cards" << std::endl;
             return 12;
         } else {
-            //std::cout << _id << " I ignored an already used +2" << std::endl;
+            if (debug) std::cout << _id << " I ignored an already used +2" << std::endl;
         }
     } else if (top.color != BLACK && top.value == 10) { // any skip
         if (top.wild) {
@@ -73,10 +73,10 @@ int Player::do_turn(Deck &deck, Deck &discard){
             // put back the top card
             discard.put_on_top(top);
 
-            //std::cout << _id << " I was skipped" << std::endl;
+            if (debug) std::cout << _id << " I was skipped" << std::endl;
             return 10;
         } else {
-            //std::cout << _id << " I ignored an already used skip" << std::endl;
+            if (debug) std::cout << _id << " I ignored an already used skip" << std::endl;
         }
     } else if (top.color != BLACK && top.value == 11) { // any reverse
 
@@ -101,7 +101,7 @@ int Player::do_turn(Deck &deck, Deck &discard){
     }
     if (found.value < 0) { // couldn't find a good card
         while(true){
-            if (deck.get_cards().size() < 10) { // if we ran out of cards
+            if (deck.num_cards() < 10) { // if we ran out of cards
                 deck.generate_deck(); // rebuild deck
                 deck.shuffle(); // shuffle deck
             }
@@ -125,7 +125,7 @@ int Player::do_turn(Deck &deck, Deck &discard){
     discard.put_on_top(top);
 
     // place ur card on top
-    //std::cout << _id << " I played a " << print_card(found) << std::endl;
+    if (debug) std::cout << _id << " I played a " << print_card(found) << std::endl;
     discard.put_on_top(found);
 
     if (found.value == 11) { // if its a reverse
@@ -147,17 +147,17 @@ int Player::do_turn(Deck &deck, Deck &discard){
     different versions of this are OK -- this is how the player finds their card
 */
 card_t Player::find_in_hand(card_t c){
-    std::vector<card_t> cards = _hand.get_cards();
+    std::vector<card_t>* cards = _hand.get_cards();
 
-    for (unsigned int i = 0; i < cards.size(); i++){
+    for (unsigned int i = 0; i < cards->size(); i++){
         if (c.value == 1000) {
-            if (cards.at(i).color == BLACK||
-                cards.at(i).color == c.color)
+            if (cards->at(i).color == BLACK||
+                cards->at(i).color == c.color)
                 return _hand.get_nth_card(i);
         } else {
-            if (cards.at(i).color == BLACK||
-                cards.at(i).color == c.color ||
-                cards.at(i).value == c.value)
+            if (cards->at(i).color == BLACK||
+                cards->at(i).color == c.color ||
+                cards->at(i).value == c.value)
                 return _hand.get_nth_card(i);
         }
     }
