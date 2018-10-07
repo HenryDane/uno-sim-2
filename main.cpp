@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 #include "main.h"
 #include "deck.h"
 #include "player.h"
@@ -11,12 +13,14 @@ color_t wild_color_now = BLACK;
 bool wild_color_valid = false;
 
 int main() {
+    srand (time(NULL));
+
     std::cout << "Uno Simulator 2" << std::endl;
 
     int p1, p2, p3, p4;
     p1 = p2 = p3 = p4 = 0;
     for (int i = 0; i < 1000; i++){
-        int a = simulate_game(4);
+        int a = simulate_game(2);
         switch (a) {
             case 0: p1++; break;
             case 1: p2++; break;
@@ -43,7 +47,7 @@ void deal(Deck &deck, std::vector<Player> &players){
 }
 
 int simulate_game(int n_players) {
-    //std::cout << "-----------------New Game-----------------" << std::endl;
+    std::cout << "-----------------New Game-----------------" << std::endl;
     bool done = false;
     std::vector<Player> players;
     for (int i = 0; i < n_players; i++) {
@@ -66,9 +70,19 @@ int simulate_game(int n_players) {
     }
 
     int turns = 0;
+    int cycle = 0;
     while (!done) {
         bool reversed = false;
-        for (unsigned int i = 0; i < players.size(); i += ((reversed == false) ? 1 : -1)){
+        //for (unsigned int i = 0; i < players.size(); i += ((reversed == false) ? 1 : -1)){
+        unsigned int i = 0;
+        for /* ever */ ( ; ; cycle += ((reversed == false) ? 1 : -1)){
+            // FIX THIS ASAP
+            if (cycle >= 0) {
+                i = cycle % n_players;
+            } else {
+                i = ((n_players - abs(cycle % n_players)) >= n_players) ? 0 : n_players - abs(cycle % n_players);
+            }
+            //std::cout << cycle << " [" << i << "] ";
             if (players[i].do_turn(deck, discard) == 1) reversed = !reversed;
 
             //std::cout << std::endl;
@@ -90,6 +104,8 @@ int simulate_game(int n_players) {
                 deck.shuffle();
             }
         }
+
+        std::cout << "Got out of loop???" << std::endl;
     }
 
     return 1000;
